@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use anyhow::{Context, Result};
-use chrono::{NaiveDateTime, Local, Datelike};
+use chrono::{NaiveDateTime, Local, Datelike, Timelike};
 
 pub struct StateDB {
     path: String,

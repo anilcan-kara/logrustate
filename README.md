@@ -22,11 +22,11 @@ cargo install --git https://github.com/anilcan-kara/logrustate.git
 
 ### 2. Direct Binary Download
 You can download the precompiled static binary for your platform directly from the GitHub Release assets:
-- 💻 **Windows (x64)**: [logrustate-win32-x64.exe](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.1/logrustate-win32-x64.exe)
-- 🐧 **Linux (x64)**: [logrustate-linux-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.1/logrustate-linux-x64)
-- 🐧 **Linux (ARM64)**: [logrustate-linux-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.1/logrustate-linux-arm64)
-- 🍎 **macOS (x64)**: [logrustate-darwin-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.1/logrustate-darwin-x64)
-- 🍎 **macOS (ARM64)**: [logrustate-darwin-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.1/logrustate-darwin-arm64)
+- 💻 **Windows (x64)**: [logrustate-win32-x64.exe](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-win32-x64.exe)
+- 🐧 **Linux (x64)**: [logrustate-linux-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-linux-x64)
+- 🐧 **Linux (ARM64)**: [logrustate-linux-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-linux-arm64)
+- 🍎 **macOS (x64)**: [logrustate-darwin-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-darwin-x64)
+- 🍎 **macOS (ARM64)**: [logrustate-darwin-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-darwin-arm64)
 
 ## CLI Usage
 

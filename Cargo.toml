@@ -1,6 +1,6 @@
 [package]
 name = "logrustate"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Anilcan Kara <anilcan@kara.dev>"]
 description = "A modern, drop-in replacement for logrotate — written in Rust"

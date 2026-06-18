@@ -51,7 +51,7 @@ impl<'a> Rotator<'a> {
             if self.verbose {
                 println!("No matching files found for pattern {:?}", entry.paths);
             }
-            return Ok();
+            return Ok(());
         }
 
         let mut files_to_rotate = Vec::new();
@@ -65,7 +65,7 @@ impl<'a> Rotator<'a> {
             if self.verbose {
                 println!("No files require rotation in this block.");
             }
-            return Ok();
+            return Ok(());
         }
 
         if let Some(ref script) = entry.config.prerotate {
@@ -314,7 +314,7 @@ impl<'a> Rotator<'a> {
     fn run_script(&self, script: &str, args: &str) -> Result<()> {
         if self.dry_run {
             println!("{} script: {}", "Would run".yellow().bold(), script);
-            return Ok();
+            return Ok(());
         }
 
         if self.verbose {
