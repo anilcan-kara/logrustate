@@ -1,5 +1,5 @@
 [package]
-name = "logrustate"
+name = "logrustate-cli"
 version = "0.1.2"
 edition = "2024"
 authors = ["Anilcan Kara <anilcan@kara.dev>"]
