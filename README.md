@@ -1,111 +1,112 @@
-# logrustate
+<div align="center">
 
-A modern, drop-in replacement for `logrotate` — written in Rust.
+<h1>logrustate</h1>
 
-`logrustate` is designed to be fully compatible with the traditional logrotate configuration format, while bringing modern features like TOML configuration support, better performance, safety, and clear output formatting.
+<p><strong>A modern, drop-in replacement for logrotate — written in Rust.</strong></p>
+
+[![Crates.io](https://img.shields.io/crates/v/logrustate?style=flat-square&color=fc8d62)](https://crates.io/crates/logrustate)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/anilcan-kara/logrustate/release.yml?style=flat-square)](https://github.com/anilcan-kara/logrustate/actions)
+[![GitHub Release](https://img.shields.io/github/v/release/anilcan-kara/logrustate?style=flat-square&color=8be04e)](https://github.com/anilcan-kara/logrustate/releases)
+
+```bash
+logrustate /etc/logrustate.toml --verbose
+```
+
+</div>
+
+---
 
 ## Why logrustate?
 
-- **Fast & Safe** — Built in Rust, offering memory safety and high performance.
-- **Drop-in Compatible** — Supports legacy `logrotate.conf` configuration syntax.
-- **TOML Support** — Allows writing structured configurations in modern TOML.
-- **Robust Suffix Management** — Supports both numeric and custom date-based suffix names (`dateext`).
-- **Gzip Compression** — Built-in fast gzip compression (`flate2`).
-- **Dry-run Mode** — Colorized preview output of what actions would be performed.
+`logrotate` has been the de-facto log rotation tool on Linux since **1996**. It works — but it was written in C, relies on `crond`, has a confusing config format, no dry-run mode, and cryptic errors.
 
-## Installation
+**logrustate** is a modern replacement with a clean TOML config, verbose output, proper dry-run, and full compatibility with legacy `logrotate.conf` syntax.
 
-### 1. From Source (Cargo)
-```bash
-cargo install --git https://github.com/anilcan-kara/logrustate.git
-```
+| | logrustate 🦀 | logrotate |
+|---|---|---|
+| Language | Rust | C |
+| Config format | TOML (+ legacy logrotate.conf) | logrotate.conf |
+| Dry-run mode | `--debug` | `--debug` (partial) |
+| State tracking | Per-file JSON state | `/var/lib/logrotate/status` |
+| Verbose output | Full colored output | Minimal |
+| Memory safety | ✓ (Rust) | C (manual) |
+| Install | Single binary | Package manager |
 
-### 2. Direct Binary Download
-You can download the precompiled static binary for your platform directly from the GitHub Release assets:
-- 💻 **Windows (x64)**: [logrustate-win32-x64.exe](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-win32-x64.exe)
-- 🐧 **Linux (x64)**: [logrustate-linux-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-linux-x64)
-- 🐧 **Linux (ARM64)**: [logrustate-linux-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-linux-arm64)
-- 🍎 **macOS (x64)**: [logrustate-darwin-x64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-darwin-x64)
-- 🍎 **macOS (ARM64)**: [logrustate-darwin-arm64](https://github.com/anilcan-kara/logrustate/releases/download/v0.1.2/logrustate-darwin-arm64)
+---
 
-## CLI Usage
+## Features
 
-```bash
-logrustate [FLAGS] [OPTIONS] <CONFIG_FILE>...
-```
+- 🔄 **Drop-in compatible** — reads existing `logrotate.conf` and `/etc/logrotate.d/` configs
+- 📄 **Modern TOML config** — cleaner, more readable alternative config format
+- 🐛 **Debug mode** — full dry-run with verbose output, no files touched
+- 🗜️ **Compression** — gzip, bzip2, xz support
+- 📊 **State tracking** — tracks last rotation time per log file
+- 🎨 **Colored output** — human-readable progress and error messages
+- ⚡ **Fast** — native binary, no interpreter overhead
+- 🔒 **Safe** — written in Rust, no unsafe memory operations
 
-### Flags & Options
+---
 
-- `-d, --debug` — Dry-run mode. Implies `--verbose` and does not modify any files.
-- `-v, --verbose` — Print details during processing.
-- `-f, --force` — Force rotation of all logs, even if not yet scheduled.
-- `-s, --state <PATH>` — Path to the state file (defaults to `/var/lib/logrustate/status`).
+## Quick Start
 
-## Configuration Formats
-
-### 1. Legacy Syntax (`logrotate.conf` compatible)
-
-```text
-/var/log/nginx/*.log {
-    daily
-    rotate 7
-    compress
-    delaycompress
-    missingok
-    notifempty
-    sharedscripts
-    postrotate
-        systemctl reload nginx
-    endscript
-}
-```
-
-### 2. Modern TOML Syntax
-
-Create a configuration file with the `.toml` extension:
-
+### 1. Create a TOML config
 ```toml
-[global]
-rotate = 4
+# /etc/logrustate.toml
+
+[[logs]]
+path = "/var/log/nginx/access.log"
+rotate = 7          # keep 7 rotated files
+compress = true     # gzip after rotation
+daily = true        # rotate daily
+missingok = true    # don't error if file is missing
+notifempty = true   # skip rotation if log is empty
+
+[[logs]]
+path = "/var/log/myapp/*.log"
+rotate = 14
 compress = true
-
-[[entries]]
-paths = ["/var/log/app/*.log"]
-frequency = "daily"
-copytruncate = true
+weekly = true
+postrotate = "systemctl reload myapp"
 ```
 
-## Systemd Integration
-
-You can schedule `logrustate` using a Systemd timer.
-
-### Service File (`/etc/systemd/system/logrustate.service`)
-
-```ini
-[Unit]
-Description=Rotate log files
-Documentation=https://github.com/anilcan-kara/logrustate
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/logrustate /etc/logrustate.conf
+### 2. Run logrustate
+```bash
+logrustate /etc/logrustate.toml
 ```
 
-### Timer File (`/etc/systemd/system/logrustate.timer`)
-
-```ini
-[Unit]
-Description=Daily rotation of log files
-
-[Timer]
-OnCalendar=daily
-AccuracySec=1h
-Persistent=true
-
-[Install]
-WantedBy=timers.target
+### 3. Preview without changes (dry-run)
+```bash
+logrustate /etc/logrustate.toml --debug
 ```
+
+---
+
+## CLI Reference
+
+```
+logrustate [OPTIONS] <CONFIG>...
+
+Arguments:
+  <CONFIG>...    Path to configuration file(s) — TOML or logrotate.conf format
+
+Options:
+  -d, --debug     Debug mode: verbose output + dry-run (no files modified)
+  -v, --verbose   Verbose mode: print details during processing
+  -f, --force     Force rotation of all logs, even if not yet scheduled
+  -s, --state     State file path [default: /var/lib/logrustate/status]
+  -h, --help      Print help
+  -V, --version   Print version
+```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). All PRs welcome.
+
+---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT © [Anilcan Kara](https://github.com/anilcan-kara)
