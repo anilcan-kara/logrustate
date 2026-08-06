@@ -23,34 +23,25 @@ logrustate /etc/logrustate.toml --verbose
 
 **logrustate** is a modern replacement with a clean TOML config, verbose output, proper dry-run, and full compatibility with legacy `logrotate.conf` syntax.
 
-| | logrustate 🦀 | logrotate |
-|---|---|---|
-| Language | Rust | C |
-| Config format | TOML (+ legacy logrotate.conf) | logrotate.conf |
-| Dry-run mode | `--debug` | `--debug` (partial) |
-| State tracking | Per-file JSON state | `/var/lib/logrotate/status` |
-| Verbose output | Full colored output | Minimal |
-| Memory safety | ✓ (Rust) | C (manual) |
-| Install | Single binary | Package manager |
-
 ---
 
-## Features
+## Installation
 
-- 🔄 **Drop-in compatible** — reads existing `logrotate.conf` and `/etc/logrotate.d/` configs
-- 📄 **Modern TOML config** — cleaner, more readable alternative config format
-- 🐛 **Debug mode** — full dry-run with verbose output, no files touched
-- 🗜️ **Compression** — gzip, bzip2, xz support
-- 📊 **State tracking** — tracks last rotation time per log file
-- 🎨 **Colored output** — human-readable progress and error messages
-- ⚡ **Fast** — native binary, no interpreter overhead
-- 🔒 **Safe** — written in Rust, no unsafe memory operations
+### ⚡ Quick Install (Linux / macOS)
+```bash
+curl -fsSL https://raw.githubusercontent.com/anilcan-kara/logrustate/master/install.sh | sh
+```
+
+### Cargo
+```bash
+cargo install logrustate
+```
 
 ---
 
 ## Quick Start
 
-### 1. Create a TOML config
+### Create a TOML config
 ```toml
 # /etc/logrustate.toml
 
@@ -61,42 +52,11 @@ compress = true     # gzip after rotation
 daily = true        # rotate daily
 missingok = true    # don't error if file is missing
 notifempty = true   # skip rotation if log is empty
-
-[[logs]]
-path = "/var/log/myapp/*.log"
-rotate = 14
-compress = true
-weekly = true
-postrotate = "systemctl reload myapp"
 ```
 
-### 2. Run logrustate
-```bash
-logrustate /etc/logrustate.toml
-```
-
-### 3. Preview without changes (dry-run)
+### Preview without changes (dry-run)
 ```bash
 logrustate /etc/logrustate.toml --debug
-```
-
----
-
-## CLI Reference
-
-```
-logrustate [OPTIONS] <CONFIG>...
-
-Arguments:
-  <CONFIG>...    Path to configuration file(s) — TOML or logrotate.conf format
-
-Options:
-  -d, --debug     Debug mode: verbose output + dry-run (no files modified)
-  -v, --verbose   Verbose mode: print details during processing
-  -f, --force     Force rotation of all logs, even if not yet scheduled
-  -s, --state     State file path [default: /var/lib/logrustate/status]
-  -h, --help      Print help
-  -V, --version   Print version
 ```
 
 ---
