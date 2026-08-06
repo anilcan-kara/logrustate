@@ -98,58 +98,50 @@ fn parse_legacy(content: &str, base_dir: &Path) -> Result<Vec<LogEntry>> {
         if let Some(ref script_type) = current_script_type {
             if line == "endscript" {
                 match script_type.as_str() {
-                    "postrotate" => {
-                        if current_paths.is_some() {
-                            current_config.postrotate = Some(current_script_body.trim().to_string());
-                        } else {
-                            global.postrotate = Some(current_script_body.trim().to_string());
-                        }
-                    }
-                    "prerotate" => {
-                        if current_paths.is_some() {
-                            current_config.prerotate = Some(current_script_body.trim().to_string());
-                        } else {
-                            global.prerotate = Some(current_script_body.trim().to_string());
-                        }
-                    }
+                    "postrotate" => current_config.postrotate = Some(current_script_body.trim().to_string()),
+                    "prerotate" => current_config.prerotate = Some(current_script_body.trim().to_string()),
                     _ => {}
                 }
                 current_script_type = None;
                 current_script_body.clear();
             } else {
-                current_script_body.push_str(raw_line);
-                current_script_body.push('\n');
+                if !current_script_body.is_empty() {
+                    current_script_body.push('\n');
+                }
+                current_script_body.push_str(line);
             }
             continue;
         }
 
         if line.starts_with("include ") {
-            let include_path_str = line["include ".len()..].trim().trim_matches('"');
-            let include_path = PathBuf::from(include_path_str);
-            let absolute_path = if include_path.is_absolute() {
-                include_path
-            } else {
-                base_dir.join(include_path)
-            };
-
-            let pattern = absolute_path.to_string_lossy().to_string();
-            if let Ok(paths) = glob::glob(&pattern) {
-                for path_entry in paths {
-                    if let Ok(p) = path_entry {
-                        if p.is_file() {
-                            if let Ok(mut sub_entries) = parse_config_file(&p) {
-                                entries.append(&mut sub_entries);
+            let include_path_str = line["include ".len()..].trim();
+            let include_path = base_dir.join(include_path_str);
+            if include_path.is_dir() {
+                if let Ok(dir_entries) = fs::read_dir(&include_path) {
+                    for entry in dir_entries.flatten() {
+                        let path = entry.path();
+                        if path.is_file() {
+                            if let Ok(sub_entries) = parse_config_file(&path) {
+                                entries.extend(sub_entries);
                             }
                         }
                     }
+                }
+            } else if include_path.is_file() {
+                if let Ok(sub_entries) = parse_config_file(&include_path) {
+                    entries.extend(sub_entries);
                 }
             }
             continue;
         }
 
+        if line == "{" {
+            continue;
+        }
+
         if line.ends_with('{') {
-            let paths_part = line[..line.len() - 1].trim();
-            let paths: Vec<String> = paths_part
+            let paths_str = line[..line.len() - 1].trim();
+            let paths: Vec<String> = paths_str
                 .split_whitespace()
                 .map(|s| s.trim_matches('"').to_string())
                 .collect();
@@ -165,28 +157,19 @@ fn parse_legacy(content: &str, base_dir: &Path) -> Result<Vec<LogEntry>> {
                     config: current_config.clone(),
                 });
             }
+            current_config = LogConfig::default();
             continue;
         }
-
-        if line == "postrotate" || line == "prerotate" {
-            current_script_type = Some(line.to_string());
-            current_script_body.clear();
-            continue;
-        }
-
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.is_empty() {
-            continue;
-        }
-
-        let directive = parts[0];
-        let value = if parts.len() > 1 { Some(parts[1..].join(" ")) } else { None };
 
         let target = if current_paths.is_some() {
             &mut current_config
         } else {
             &mut global
         };
+
+        let mut parts = line.split_whitespace();
+        let directive = parts.next().unwrap_or("");
+        let value = parts.next().map(|s| s.to_string());
 
         match directive {
             "rotate" => {
@@ -232,7 +215,7 @@ fn parse_legacy(content: &str, base_dir: &Path) -> Result<Vec<LogEntry>> {
                 target.copytruncate = Some(false);
             }
             "create" => {
-                target.create = value.or(Some("".to_string()));
+                target.create = Some(line["create".len()..].trim().to_string());
             }
             "nocreate" => {
                 target.create = None;
@@ -246,7 +229,7 @@ fn parse_legacy(content: &str, base_dir: &Path) -> Result<Vec<LogEntry>> {
             "notifempty" => {
                 target.notifempty = Some(true);
             }
-            "ifempty" => {
+            "notifempty" | "ifempty" => {
                 target.notifempty = Some(false);
             }
             "dateext" => {
@@ -314,5 +297,18 @@ fn parse_size_to_bytes(val: &str) -> u64 {
         num * 1024 * 1024 * 1024
     } else {
         num
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_size_to_bytes() {
+        assert_eq!(parse_size_to_bytes("100"), 100);
+        assert_eq!(parse_size_to_bytes("100k"), 100 * 1024);
+        assert_eq!(parse_size_to_bytes("10M"), 10 * 1024 * 1024);
+        assert_eq!(parse_size_to_bytes("2G"), 2 * 1024 * 1024 * 1024);
     }
 }
