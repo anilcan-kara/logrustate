@@ -128,3 +128,28 @@ impl StateDB {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_should_rotate_unseen_path() {
+        let db = StateDB {
+            path: "dummy".to_string(),
+            entries: HashMap::new(),
+        };
+        assert!(db.should_rotate("/var/log/test.log", "daily"));
+    }
+
+    #[test]
+    fn test_should_rotate_recent_path() {
+        let mut entries = HashMap::new();
+        entries.insert("/var/log/test.log".to_string(), Local::now().naive_local());
+        let db = StateDB {
+            path: "dummy".to_string(),
+            entries,
+        };
+        assert!(!db.should_rotate("/var/log/test.log", "daily"));
+    }
+}
